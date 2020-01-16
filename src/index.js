@@ -6,23 +6,24 @@ const slash = require("slash");
 const program = require("commander");
 const Octokit = require("@octokit/rest");
 const request = require("request");
+const os = require("os");
+require("dotenv").config();
 
-async function upload(fullRepo, toDir) {
+async function upload(fullRepo) {
   try {
     const region = process.env.REGION;
     const accessKeyId = process.env.ACCESS_KEY_ID;
     const accessKeySecret = process.env.ACCESS_KEY_SECRET;
     const bucket = process.env.BUCKET;
-
-    const token = process.env.GITHUB_TOKEN;
-    // ali-oss options
-
-    const aclType = "public-read";
-    // upload options
+    const aclType = process.env.ACL_TYPE || "public-read"; // 阿里云访问权限
+    const directory = process.env.DIRECTORY || ""; // 阿里云目录
+    const overwrite = process.env.OVERWRITE !== "false"; // 覆盖已存在的文件
     // const pattern = '*.*';
-    const overwrite = true;
-    // const fromDir = 'dist';
-    // const toDir = 'gxwork';
+    const token = process.env.GITHUB_TOKEN; // github token
+
+    console.log("====================================");
+    console.log({ region, accessKeyId, accessKeySecret, bucket });
+    console.log("====================================");
 
     const client = new Client({
       region,
@@ -36,7 +37,6 @@ async function upload(fullRepo, toDir) {
       auth: token
     });
 
-    // let fullRepo = "lomocc/gxwork:v0.5.1-alpha.1";
     const owner = fullRepo.substring(0, fullRepo.indexOf("/"));
     const repo = fullRepo.substring(
       fullRepo.indexOf("/") + 1,
@@ -50,18 +50,12 @@ async function upload(fullRepo, toDir) {
         repo,
         tag
       });
-
-      console.log("====================================");
-      console.log("release", release.data.assets);
-      console.log("====================================");
-
       const assets = release.data.assets;
-      console.info("====================================");
-      console.info("[Files]");
-      console.info(assets.join("\n"));
-      console.info("====================================");
+      console.log("====================================");
+      console.log("assets", JSON.stringify(assets, null, os.EOL));
+      console.log("====================================");
       for (const asset of assets) {
-        const objectName = slash(path.join(toDir, asset.name));
+        const objectName = slash(path.join(directory, asset.name));
         console.info(`[${objectName}]`);
         console.info("====================================");
         let shouldUpload = true;
@@ -77,10 +71,6 @@ async function upload(fullRepo, toDir) {
         }
         if (shouldUpload) {
           let httpStream = request(asset.browser_download_url);
-          // let writeStream = fs.createWriteStream('/dev/null');
-          // let readStream = fs.createReadStream('/dev/null');
-          // // 联接Readable和Writable
-          // httpStream.pipe(writeStream);
 
           try {
             //object-name可以自定义为文件名（例如file.txt）或目录（例如abc/test/file.txt）的形式，实现将文件上传至当前Bucket或Bucket下的指定目录。
@@ -99,24 +89,31 @@ async function upload(fullRepo, toDir) {
             }
             console.info(`[${objectName}] Complete`);
             console.info("====================================");
-          } catch (e) {
-            //
-            console.info(`Error: ${e}`);
+          } catch (error) {
+            console.log("====================================");
+            console.log("Error: ", error.message);
+            console.log("====================================");
           }
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log("====================================");
+      console.log("Error: ", error.message);
+      console.log("====================================");
+    }
   } catch (error) {
     console.log("====================================");
-    console.log("Error: ", error);
+    console.log("Error: ", error.message);
     console.log("====================================");
   }
 }
 
 program.version("0.0.1");
 
-program.option("-r, --repo <repo>", "repo").option("-t, --to <to>", "to dir");
+program.arguments("<repo>").action(function(repo) {
+  program.repo = repo;
+});
 
 program.parse(process.argv);
 
-upload(program.repo, program.to);
+upload(program.repo);

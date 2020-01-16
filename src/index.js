@@ -22,7 +22,7 @@ async function upload(fullRepo) {
     const token = process.env.GITHUB_TOKEN; // github token
 
     console.log("====================================");
-    console.log({ region, accessKeyId, accessKeySecret, bucket });
+    console.log({ region, bucket, directory, overwrite });
     console.log("====================================");
 
     const client = new Client({

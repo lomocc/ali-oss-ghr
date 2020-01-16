@@ -1,0 +1,35 @@
+{
+  "name": "ali-oss-ghr",
+  "version": "0.0.0",
+  "description": "Upload Github Release Assets to Aliyun OSS",
+  "main": "src/index.js",
+  "bin": {
+    "ali-oss-ghr": "src/index.js"
+  },
+  "scripts": {
+    "build": "ncc build",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lomocc/ali-oss-ghr.git"
+  },
+  "keywords": [
+    "github",
+    "release",
+    "upload",
+    "ali-oss"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "ali-oss": "^6.3.1",
+    "commander": "^4.1.0",
+    "cross-env": "^6.0.3",
+    "request": "^2.88.0",
+    "slash": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.1.7",
+    "@zeit/ncc": "^0.20.5"
+  }
+}

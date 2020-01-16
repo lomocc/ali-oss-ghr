@@ -115,7 +115,7 @@ async function upload(fullRepo, toDir) {
 
 program.version("0.0.1");
 
-program.option("-r, --repo", "repo").option("-t, --to", "to dir");
+program.option("-r, --repo <repo>", "repo").option("-t, --to <to>", "to dir");
 
 program.parse(process.argv);
 

@@ -37,22 +37,37 @@ async function upload(fullRepo) {
       auth: token
     });
 
+    const sTagIndex = fullRepo.indexOf(":");
+    const sHasTag = sTagIndex !== -1;
     const owner = fullRepo.substring(0, fullRepo.indexOf("/"));
     const repo = fullRepo.substring(
       fullRepo.indexOf("/") + 1,
-      fullRepo.indexOf(":")
+      sHasTag ? sTagIndex : undefined
     );
-    const tag = fullRepo.substring(fullRepo.indexOf(":") + 1);
 
     try {
-      const release = await octokit.repos.getReleaseByTag({
-        owner,
-        repo,
-        tag
-      });
-      const assets = release.data.assets;
+      let release;
+      if (sHasTag) {
+        const tag = fullRepo.substring(sTagIndex + 1);
+        release = await octokit.repos.getReleaseByTag({
+          owner,
+          repo,
+          tag
+        });
+      } else {
+        release = await octokit.repos.getLatestRelease({
+          owner,
+          repo
+        });
+      }
+      const { tag_name, assets } = release.data;
       console.log("====================================");
-      console.log("assets", JSON.stringify(assets, null, os.EOL));
+      console.log("正在同步", tag_name);
+      console.log(
+        assets
+          .map(asset => `[${asset.name}](${asset.browser_download_url})`)
+          .join(os.EOL)
+      );
       console.log("====================================");
       for (const asset of assets) {
         const objectName = slash(path.join(directory, asset.name));
